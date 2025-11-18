@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react'
 import Image from "next/image";
-import {LayoutGrid,PiggyBank,ReceiptText,ShieldCheck} from 'lucide-react'
+// 1. ADICIONEI O BARCHART DE VOLTA
+import { LayoutGrid, PiggyBank, ReceiptText, ShieldCheck, Calculator, BarChart } from 'lucide-react' 
 import { UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+
 function SideNav() {
     const menuList=[
         {
@@ -26,12 +28,26 @@ function SideNav() {
             path:'/dashboard/expenses'
 
         },
+        // 2. ITEM "DASH" CORRIGIDO
         {
             id:4,
+            name:'Dash', 
+            icon: BarChart, 
+            path:'/dashboard/dash'
+        },
+        // 3. ITEM "CONSÓRCIOS" CORRIGIDO
+        {
+            id:5,
+            name:'Consórcios',
+            icon: Calculator,
+            path:'/dashboard/consortium'
+        },
+        // 4. ITEM "UPGRADE" CORRIGIDO
+        {
+            id:6, 
             name:'Upgrade',
             icon:ShieldCheck,
             path:'/dashboard/upgrade'
-
         }
     ]
     const path=usePathname();
@@ -39,6 +55,7 @@ function SideNav() {
     useEffect(()=>{
         console.log(path)
     },[path])
+
   return (
     <div className='h-screen p-5 border shadow-sm'>
         <Image src={'/logo.svg'}
