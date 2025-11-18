@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Car, Home, Bike, Smile } from 'lucide-react'; // ✅ Bike em vez de Motorcycle
+import MyconChatbot from '@/components/ui/MyconChatbot';
 
 // Opções de Categoria
 const categories = [
@@ -128,6 +129,14 @@ export default function ConsortiumSimulatorPage() {
       >
         Simular
       </button>
+      {/* Adicione uma margem ou divisor se quiser separar visualmente */}
+      <div className="my-8 border-t border-gray-200" />
+      
+      {/* Chamada do Chatbot no modo Inline */}
+      <h3 className="text-lg font-semibold text-center mb-4 text-gray-700">
+        Ainda tem dúvidas? Fale com o Mycon
+      </h3>
+      <MyconChatbot variant="inline" />
     </div>
   );
 }
