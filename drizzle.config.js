@@ -1,8 +1,13 @@
+import { defineConfig } from 'drizzle-kit';
+import * as dotenv from 'dotenv';
 
-export default {
-    schema: "./utils/schema.jsx",
-    driver: 'pg',
-    dbCredentials: {
-      connectionString: process.env.NEXT_PUBLIC_DATABASE_URL,
-    }
-  };
+// Carrega as variáveis de ambiente do .env.local
+dotenv.config({ path: '.env.local' });
+
+export default defineConfig({
+  schema: "./utils/schema.jsx",
+  dialect: 'postgresql', // Atualizado de 'driver' para 'dialect'
+  dbCredentials: {
+    url: process.env.DATABASE_URL,
+  },
+});
