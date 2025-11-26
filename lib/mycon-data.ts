@@ -15,7 +15,7 @@ export const BLOG_ARTICLES = [
     categoria: 'Consórcio imobiliário', // Novo Campo
     data: '4/11/25', // Novo Campo
     tags: ['contemplação', 'imóvel'],
-    image: '/login.jpg', // Usando uma imagem genérica existente
+    image: '/Consorcio-Imobiliario.jpg', // Usando uma imagem genérica existente
     snippet: 'Entenda como funciona um consórcio de imóveis, quais são as taxas e como simular.'
   },
   {

@@ -1,10 +1,21 @@
 import React, { useEffect } from 'react'
 import Image from "next/image";
-import { LayoutGrid, PiggyBank, ReceiptText, ShieldCheck, Calculator, BarChart, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutGrid, PiggyBank, ReceiptText, Calculator, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+
+// Adicionando os estilos globais para garantir o efeito de vidro caso não esteja no global.css
+const CustomStyles = () => (
+    <style jsx global>{`
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(16px);
+        border-right: 1px solid rgba(226, 232, 240, 0.8);
+      }
+    `}</style>
+);
 
 function SideNav({ isCollapsed, toggleSideNav }) {
     const menuList = [
@@ -16,21 +27,15 @@ function SideNav({ isCollapsed, toggleSideNav }) {
         },
         {
             id: 2,
-            name: 'Budgets',
+            name: 'Orçamento',
             icon: PiggyBank,
             path: '/dashboard/budgets'
         },
         {
             id: 3,
-            name: 'Expenses',
+            name: 'Despesas',
             icon: ReceiptText,
             path: '/dashboard/expenses'
-        },
-        {
-            id: 4,
-            name: 'Dash',
-            icon: BarChart,
-            path: '/dashboard/dash'
         },
         {
             id: 5,
@@ -40,12 +45,6 @@ function SideNav({ isCollapsed, toggleSideNav }) {
         },
         {
             id: 6,
-            name: 'Upgrade',
-            icon: ShieldCheck,
-            path: '/dashboard/upgrade'
-        },
-        {
-            id: 7,
             name: 'Blog',
             icon: BookOpen,
             path: '/dashboard/blog'
@@ -59,59 +58,88 @@ function SideNav({ isCollapsed, toggleSideNav }) {
 
     return (
         <div className={cn(
-            'h-screen border shadow-sm bg-white flex flex-col transition-all duration-300 relative',
-            isCollapsed ? 'p-2' : 'p-5'
+            'h-screen glass-nav flex flex-col transition-all duration-300 relative z-50',
+            isCollapsed ? 'w-20 p-4' : 'w-64 p-6'
         )}>
-            {/* Toggle Button */}
+            <CustomStyles />
+            
+            {/* Toggle Button - Estilo atualizado com sombra e hover */}
             <button
                 onClick={toggleSideNav}
-                className="absolute -right-3 top-10 bg-white border shadow-md rounded-full p-1 text-gray-500 hover:text-primary transition-colors z-50"
+                className="absolute -right-3 top-10 bg-white border border-slate-200 shadow-md rounded-full p-1.5 text-slate-500 hover:text-[#005CE5] transition-all hover:scale-110 z-50"
             >
                 {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
 
-            <div className={cn("flex items-center justify-center transition-all duration-300", isCollapsed ? "mb-4" : "mb-5")}>
+            {/* Logo Section */}
+            <div className={cn("flex items-center justify-center transition-all duration-300 mb-8", isCollapsed ? "mb-6" : "mb-8")}>
                 {isCollapsed ? (
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    // Logo simplificado estilo "App Icon" do código 2
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#005CE5] to-[#003380] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
                         M
                     </div>
                 ) : (
-                    <Image src={'/logo-mycon-A.svg'}
+                    <Image src={'/logo-mycon-novo.png'}
                         alt='logo mycon'
-                        width={160}
-                        height={100}
+                        width={140}
+                        height={80}
                         className="transition-opacity duration-300"
+                        priority
                     />
                 )}
             </div>
 
-            <div className='mt-5 flex-grow'>
-                {menuList.map((menu, index) => (
-                    <Link href={menu.path} key={index}>
-                        <h2 className={cn(
-                            "flex items-center gap-2 text-gray-500 font-medium mb-2 cursor-pointer rounded-md hover:text-primary hover:bg-blue-100 transition-all duration-200 group",
-                            isCollapsed ? "justify-center p-3" : "p-5",
-                            path == menu.path && 'text-primary bg-blue-100'
-                        )}>
-                            <menu.icon size={isCollapsed ? 24 : 20} />
-                            {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">{menu.name}</span>}
+            {/* Menu Items */}
+            <div className='flex-grow space-y-2'>
+                {menuList.map((menu, index) => {
+                    const isActive = path === menu.path;
+                    
+                    return (
+                        <Link href={menu.path} key={index}>
+                            <h2 className={cn(
+                                "flex items-center gap-3 font-medium cursor-pointer rounded-xl transition-all duration-300 group relative overflow-hidden",
+                                isCollapsed ? "justify-center p-3" : "p-4 px-5",
+                                isActive 
+                                    ? 'bg-gradient-to-r from-[#005CE5] to-[#003380] text-white shadow-lg shadow-blue-200' 
+                                    : 'text-slate-500 hover:text-[#005CE5] hover:bg-blue-50'
+                            )}>
+                                {/* Ícone */}
+                                <menu.icon 
+                                    size={isCollapsed ? 24 : 20} 
+                                    className={cn("transition-transform duration-300", !isActive && "group-hover:scale-110")}
+                                />
+                                
+                                {/* Texto */}
+                                {!isCollapsed && (
+                                    <span className="whitespace-nowrap overflow-hidden text-sm">
+                                        {menu.name}
+                                    </span>
+                                )}
 
-                            {/* Tooltip for collapsed state */}
-                            {isCollapsed && (
-                                <div className="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                                    {menu.name}
-                                </div>
-                            )}
-                        </h2>
-                    </Link>
-                ))}
+                                {/* Tooltip para estado colapsado */}
+                                {isCollapsed && (
+                                    <div className="absolute left-14 bg-slate-900 text-white text-xs px-2 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[60] whitespace-nowrap shadow-xl translate-x-2 group-hover:translate-x-0 duration-200">
+                                        {menu.name}
+                                    </div>
+                                )}
+                            </h2>
+                        </Link>
+                    )
+                })}
             </div>
+
+            {/* Footer / Profile */}
             <div className={cn(
-                'fixed bottom-10 flex gap-2 items-center transition-all duration-300',
-                isCollapsed ? 'left-5' : 'p-5'
+                'mt-auto flex gap-3 items-center transition-all duration-300 rounded-xl hover:bg-slate-50 p-2',
+                isCollapsed ? 'justify-center' : ''
             )}>
-                <UserButton />
-                {!isCollapsed && <span>Profile</span>}
+                <UserButton afterSignOutUrl="/sign-in" />
+                {!isCollapsed && (
+                    <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-slate-700">Minha Conta</span>
+                        <span className="text-xs text-slate-400">Gerenciar perfil</span>
+                    </div>
+                )}
             </div>
         </div>
     )

@@ -91,7 +91,7 @@ const Header = () => {
         <div className="flex flex-col cursor-pointer group">
           {/* Logo Image */}
           <img
-            src="/logo-mycon-A.svg"
+            src="/logo-mycon-novo.png"
             alt="Mycon"
             className="h-8 md:h-9 w-auto object-contain mb-0.5 transition-transform duration-300 group-hover:scale-105 origin-left"
           />

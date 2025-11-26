@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
     `
     
     const result = await model.generateContent(enhancedPrompt)
+    console.log('teste')
     const responseText = result.response.text()
     
     // Processar comandos especiais na resposta
