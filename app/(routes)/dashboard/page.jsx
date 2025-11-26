@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { db } from '@/utils/dbConfig';
 import { desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { Budgets, Expenses } from '@/utils/schema';
@@ -34,8 +34,7 @@ import {
   Tooltip, 
   Pie, 
   PieChart, 
-  Cell,
-  Legend
+  Cell
 } from 'recharts';
 
 // Componentes do Shadcn/UI
@@ -88,20 +87,28 @@ function Dashboard() {
     }
   }, [budgetList, expensesList]);
 
-  // --- Função Auxiliar para Ler Datas (DD/MM/YYYY ou ISO) ---
-  const parseDate = (dateString) => {
-    if (!dateString) return new Date();
+  // --- Função Auxiliar Robusta para Ler Datas ---
+  // Aceita DD/MM/YYYY, ISO String ou Objeto Date nativo
+  const parseDate = (dateInput) => {
+    if (!dateInput) return new Date();
     
-    // Verifica se é formato brasileiro DD/MM/YYYY
-    const parts = dateString.split('/');
-    if (parts.length === 3) {
-        return new Date(parts[2], parts[1] - 1, parts[0]);
+    // Proteção: Se o banco já retornar um objeto Date, usa ele direto
+    if (dateInput instanceof Date) return dateInput;
+
+    // Se for string
+    if (typeof dateInput === 'string') {
+        // Verifica se é formato brasileiro DD/MM/YYYY
+        const parts = dateInput.split('/');
+        if (parts.length === 3) {
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        // Fallback para formato ISO padrão
+        return new Date(dateInput);
     }
     
-    // Fallback para formato ISO padrão
-    return new Date(dateString);
+    return new Date();
   };
-
+  
   // Função para processar dados dos gráficos
   const processChartData = () => {
     // 1. Lógica para o BarChart (Agrupar gastos por mês - Últimos 6 meses)
@@ -178,8 +185,6 @@ function Dashboard() {
         .from(Budgets)
         .rightJoin(Expenses, eq(Budgets.id, Expenses.budgetId))
         .where(eq(Budgets.createdBy, user?.primaryEmailAddress.emailAddress));
-        // Removemos o OrderBy do SQL aqui porque datas como string (DD/MM/YYYY)
-        // não ordenam corretamente via SQL padrão. Vamos ordenar via Javascript.
       
       // Ordena via Javascript usando a função parseDate
       const sortedResult = result.sort((a, b) => {
@@ -266,7 +271,6 @@ function Dashboard() {
                 <Bell size={20} />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-[#005CE5] rounded-full"></span>
               </Button>
-              <UserButton afterSignOutUrl="/sign-in" />
             </div>
           </div>
         </div>
@@ -344,13 +348,13 @@ function Dashboard() {
                 <div className="mt-6 pt-6 border-t border-slate-200">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-slate-600">Saúde Financeira</span>
-                    <span className="text-2xl font-bold text-green-600">
+                    <span className="text-2xl font-bold text-blue-600">
                       {totalBudget > 0 ? Math.max(0, Math.min(100, Math.round(100 - percentageSpent))) : 0}/100
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div 
-                      className="bg-gradient-to-r from-green-500 to-green-400 h-2 rounded-full transition-all" 
+                      className="bg-gradient-to-r from-red-500 to-blue-700 h-2 rounded-full transition-all" 
                       style={{ width: `${totalBudget > 0 ? Math.max(0, Math.min(100, 100 - percentageSpent)) : 0}%` }}
                     ></div>
                   </div>

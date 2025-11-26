@@ -35,7 +35,7 @@ const CustomStyles = () => (
 );
 
 function CreateBudget({ refreshData }) {
-    const [emojiIcon, setEmojiIcon] = useState('😀');
+    const [emojiIcon, setEmojiIcon] = useState('💰');
     const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
@@ -60,7 +60,7 @@ function CreateBudget({ refreshData }) {
             if (result) {
                 setName('');
                 setAmount('');
-                setEmojiIcon('😀');
+                setEmojiIcon('💰');
                 refreshData();
                 toast.success('Novo orçamento criado com sucesso! 🎉');
             }

@@ -90,11 +90,12 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex flex-col cursor-pointer group">
           {/* Logo Image */}
-          <img
-            src="/logo-mycon-novo.png"
-            alt="Mycon"
-            className="h-8 md:h-9 w-auto object-contain mb-0.5 transition-transform duration-300 group-hover:scale-105 origin-left"
-          />
+            <img
+              src="/logo-mycon-novo.png"
+              alt="Mycon"
+              className="h-8 md:h-9 w-auto object-contain mb-0.5 transition-transform duration-300 group-hover:scale-105 origin-left"
+            />
+
           {/* Subtext */}
           <div className="flex items-center gap-2 pl-1">
             <div className="h-[1px] w-3 bg-[#005CE5]/50 group-hover:w-6 transition-all duration-500"></div>
@@ -464,7 +465,7 @@ export default function App() {
 
           <div className="flex flex-col items-center gap-4">
             <Link href="/dashboard" className="px-12 py-5 bg-[#005CE5] hover:bg-[#004bbd] text-white rounded-full font-bold text-xl transition-all duration-300 hover:-translate-y-2 shadow-[0_10px_40px_rgba(0,92,229,0.4)]">
-              GARANTIR Meu ACESSO
+              GARANTIR MEU ACESSO
             </Link>
             <p className="text-sm text-[#005CE5] font-medium tracking-wide uppercase">
               Lote limitado • 100% Gratuito

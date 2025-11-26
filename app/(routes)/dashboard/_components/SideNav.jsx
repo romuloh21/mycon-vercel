@@ -73,20 +73,22 @@ function SideNav({ isCollapsed, toggleSideNav }) {
 
             {/* Logo Section */}
             <div className={cn("flex items-center justify-center transition-all duration-300 mb-8", isCollapsed ? "mb-6" : "mb-8")}>
-                {isCollapsed ? (
-                    // Logo simplificado estilo "App Icon" do código 2
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#005CE5] to-[#003380] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                        M
-                    </div>
-                ) : (
-                    <Image src={'/logo-mycon-novo.png'}
+                {/* O Link envolve o conteúdo condicional */}
+                <Link href="/" className="flex items-center justify-center">
+                    {isCollapsed ? (
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#005CE5] to-[#003380] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                            M
+                        </div>
+                    ) : (
+                        <Image src={'/logo-mycon-novo.png'}
                         alt='logo mycon'
                         width={140}
                         height={80}
                         className="transition-opacity duration-300"
                         priority
-                    />
-                )}
+                        />
+                    )}
+                </Link>
             </div>
 
             {/* Menu Items */}
@@ -128,19 +130,6 @@ function SideNav({ isCollapsed, toggleSideNav }) {
                 })}
             </div>
 
-            {/* Footer / Profile */}
-            <div className={cn(
-                'mt-auto flex gap-3 items-center transition-all duration-300 rounded-xl hover:bg-slate-50 p-2',
-                isCollapsed ? 'justify-center' : ''
-            )}>
-                <UserButton afterSignOutUrl="/sign-in" />
-                {!isCollapsed && (
-                    <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-700">Minha Conta</span>
-                        <span className="text-xs text-slate-400">Gerenciar perfil</span>
-                    </div>
-                )}
-            </div>
         </div>
     )
 }

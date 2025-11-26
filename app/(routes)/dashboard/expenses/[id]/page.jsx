@@ -91,7 +91,7 @@ function ExpensesScreen({params}) {
                     onClick={()=>route.back()} 
                     className='cursor-pointer hover:bg-gray-100 p-1 rounded w-8 h-8'
                 />
-                <h2 className='text-xl sm:text-2xl font-bold'>My Expenses</h2>
+                <h2 className='text-xl sm:text-2xl font-bold'>Detalhes Orçamento</h2>
             </div>
             
             <div className='flex gap-2 items-center w-full sm:w-auto'>
