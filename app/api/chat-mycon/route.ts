@@ -1,123 +1,133 @@
-// app/api/chat-mycon/route.ts
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { BLOG_ARTICLES, TAXAS_CONSORCIO, SYSTEM_PROMPT } from '@/lib/mycon-data'
+
 import { NextRequest, NextResponse } from 'next/server'
+import OpenAI from 'openai'
+import { buildPromptWithHistory } from '@/lib/system-prompt'
+import {
+  findRelevantArticles,
+  detectIntent,
+  calculateLeadScore  // ← ADICIONADO
+} from '@/lib/mycon-data'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const client = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
+})
 
-// Função calcular consórcio
-function calcularConsorcio(valorCarta: number, prazoMeses: number, tipo: string) {
-  const taxa = TAXAS_CONSORCIO[tipo as keyof typeof TAXAS_CONSORCIO]
-  const parcelaPura = valorCarta / prazoMeses
-  const taxaAdmin = parcelaPura * taxa.admin
-  const fundoReserva = parcelaPura * taxa.fundo
-  const parcelaTotal = parcelaPura + taxaAdmin + fundoReserva
-  
-  const jurosMedio = tipo === 'imovel' ? 0.0099 : 0.0189
-  const parcelaFinanc = (valorCarta * jurosMedio) / (1 - Math.pow(1 + jurosMedio, -prazoMeses))
-  const economia = (parcelaFinanc * prazoMeses) - valorCarta
-  
-  return {
-    valorCarta,
-    prazoMeses,
-    parcelaTotal: parcelaTotal.toFixed(2),
-    parcelaFinanciamento: parcelaFinanc.toFixed(2),
-    economia: economia.toFixed(2),
-    tipo: 'calculadora'
+// --- TOOLS (Focadas em Informação) ---
+const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "buscar_blog",
+      description: "Busca links de artigos para aprofundamento.",
+      parameters: {
+        type: "object",
+        properties: { topico: { type: "string" } },
+        required: ["topico"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "salvar_lead",
+      description: "Salva contato para atendimento humano.",
+      parameters: {
+        type: "object",
+        properties: { nome: { type: "string" }, contato: { type: "string" } },
+        required: ["nome", "contato"]
+      }
+    }
   }
+];
+
+// --- EXECUTORES ---
+function executarBuscaBlog({ topico }: any) {
+  const artigos = findRelevantArticles(topico);
+  return { tipo_tool: 'blog', dados: { termo: topico, artigos } };
 }
 
-// Função buscar blog
-function buscarBlog(topico: string) {
-  const resultados = BLOG_ARTICLES.filter(article => 
-    article.tags.some(tag => 
-      topico.toLowerCase().includes(tag) || 
-      tag.includes(topico.toLowerCase())
-    )
-  ).slice(0, 2)
-  
-  return {
-    articles: resultados,
-    tipo: 'blog'
-  }
-}
-
-// Lead scoring
-function calcularLeadScore(message: string): number {
-  let score = 5
-  const hotWords = ['comprar', 'contratar', 'quanto', 'parcela', 'hoje', 'agora']
-  hotWords.forEach(word => {
-    if (message.toLowerCase().includes(word)) score += 2
-  })
-  return Math.min(score, 10)
+async function executarSalvarLead({ nome, contato }: any) {
+  return { tipo_tool: 'lead_capture', dados: { sucesso: true } };
 }
 
 export async function POST(req: NextRequest) {
-  const startTime = Date.now()
-  const { message, history = [] } = await req.json()
-
   try {
-    // OPÇÃO 1: SEM TOOLS (mais simples, funciona 100%)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-flash-latest',
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1024,
-      },
-    })
-    
-    // Prompt que instrui o modelo a responder com JSON quando necessário
-    const enhancedPrompt = `
-    ${SYSTEM_PROMPT}
-    
-    IMPORTANTE: Quando o usuário perguntar sobre valores/parcelas, responda incluindo:
-    [CALCULAR:valorCarta,prazoMeses,tipo]
-    
-    Quando perguntar sobre assuntos do blog, inclua:
-    [BLOG:topico]
-    
-    Mensagem do usuário: ${message}
-    `
-    
-    const result = await model.generateContent(enhancedPrompt)
-    const responseText = result.response.text()
-    
-    // Processar comandos especiais na resposta
-    let toolResult = null
-    
-    // Detectar se precisa calcular
-    const calcMatch = responseText.match(/\[CALCULAR:(\d+),(\d+),(\w+)\]/)
-    if (calcMatch) {
-      const [_, valor, prazo, tipo] = calcMatch
-      toolResult = calcularConsorcio(Number(valor), Number(prazo), tipo)
-    }
-    
-    // Detectar se precisa buscar blog
-    const blogMatch = responseText.match(/\[BLOG:(.+?)\]/)
-    if (blogMatch) {
-      toolResult = buscarBlog(blogMatch[1])
-    }
-    
-    // Limpar a resposta removendo os comandos
-    const cleanResponse = responseText
-      .replace(/\[CALCULAR:.+?\]/g, '')
-      .replace(/\[BLOG:.+?\]/g, '')
-      .trim()
-    
-    return NextResponse.json({
-      message: cleanResponse,
-      toolResult,
-      metadata: {
-        leadScore: calcularLeadScore(message),
-        responseTime: Date.now() - startTime
+    const { message, history = [] } = await req.json();
+    const intent = detectIntent(message);
+
+    // @ts-ignore
+    const messages = buildPromptWithHistory(message, history);
+
+    // 1. Chamada Groq
+    const firstCall = await client.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      // @ts-ignore
+      messages: messages,
+      tools: tools,
+      tool_choice: "auto",
+      temperature: 0.5,
+      max_tokens: 1024,
+    });
+
+    const responseMsg = firstCall.choices[0].message;
+    let finalContent = responseMsg.content;
+    let toolResult = null;
+
+    // 2. Processa Tools (Se houver)
+    if (responseMsg.tool_calls && responseMsg.tool_calls.length > 0) {
+      const toolCall = responseMsg.tool_calls[0];
+
+      if (toolCall.type === 'function') {
+        const fnName = toolCall.function.name;
+        const fnArgs = JSON.parse(toolCall.function.arguments);
+
+        console.log(`[GROQ] Executando: ${fnName}`, fnArgs);
+
+        if (fnName === 'buscar_blog') toolResult = executarBuscaBlog(fnArgs);
+        else if (fnName === 'salvar_lead') toolResult = await executarSalvarLead(fnArgs);
+
+        // Round Trip para gerar texto explicativo
+        messages.push(responseMsg);
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(toolResult)
+        });
+
+        const secondCall = await client.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          // @ts-ignore
+          messages: messages,
+          temperature: 0.7,
+        });
+
+        finalContent = secondCall.choices[0].message.content;
       }
-    })
-    
-  } catch (error) {
-    console.error('Erro:', error)
-    return NextResponse.json({ 
-      error: 'Erro ao processar',
-      message: 'Desculpe, tive um problema. Pode repetir?'
-    }, { status: 500 })
+    }
+
+    // ============================================================
+    // ✨ LEAD SCORING ADICIONADO AQUI:
+    // ============================================================
+    const leadScore = calculateLeadScore(message, intent)
+    const shouldCapture = leadScore >= 8
+    // ============================================================
+
+    return NextResponse.json({
+      message: finalContent || "Entendido.",
+      toolResult: toolResult,
+      metadata: {
+        intent,
+        leadScore,        // ← NOVO
+        shouldCapture     // ← NOVO
+      }
+    });
+
+  } catch (error: any) {
+    console.error("[GROQ ERROR]", error);
+    return NextResponse.json({
+      message: "Erro técnico. Tente novamente.",
+      error: true
+    }, { status: 500 });
   }
 }

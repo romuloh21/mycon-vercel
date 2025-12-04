@@ -81,61 +81,77 @@ function ExpensesScreen({params}) {
       }
       toast('Budget Deleted !');
       route.replace('/dashboard/budgets');
-  
-
-  
     }
    
   return (
-    <div className='p-10'>
-        <h2 className='text-2xl font-bold gap-2 flex justify-between items-center'>
-        <span className='flex gap-2 items-center'> 
-        <ArrowLeft onClick={()=>route.back()} className='cursor-pointer'/>
-          My Expenses
-          </span> 
-        <div className='flex gap-2 items-center'>
-         <EditBudget budgetInfo={budgetInfo}
-         refreshData={()=>getBudgetInfo()}  />
-        
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button className="flex gap-2" variant="destructive"> 
-            <Trash/> Delete</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your current budget along with expenses
-                  and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={()=>deleteBudget()}>Continue</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          </div>
+    <div className='p-4 md:p-6 lg:p-10'>
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6'>
+            <div className='flex gap-2 items-center'> 
+                <ArrowLeft 
+                    onClick={()=>route.back()} 
+                    className='cursor-pointer hover:bg-gray-100 p-1 rounded w-8 h-8'
+                />
+                <h2 className='text-xl sm:text-2xl font-bold'>Detalhes Orçamento</h2>
+            </div>
+            
+            <div className='flex gap-2 items-center w-full sm:w-auto'>
+                <EditBudget 
+                    budgetInfo={budgetInfo}
+                    refreshData={()=>getBudgetInfo()}  
+                />
+                
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button className="flex gap-2 w-full sm:w-auto" variant="destructive"> 
+                            <Trash className="w-4 h-4"/>
+                            <span className="sm:inline">Delete</span>
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="mx-4 max-w-md sm:max-w-lg">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-lg sm:text-xl">
+                                Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm sm:text-base">
+                                This action cannot be undone. This will permanently delete your current budget along with expenses
+                                and remove your data from our servers.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                                onClick={()=>deleteBudget()}
+                                className="w-full sm:w-auto"
+                            >
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </div>
 
-       </h2>
-        <div className='grid grid-cols-1 
-        md:grid-cols-2 mt-6 gap-5'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 mt-6 gap-4 md:gap-5'>
            {budgetInfo? <BudgetItem
             budget={budgetInfo}
             />:
-            <div className='h-[150px] w-full bg-slate-200 
+            <div className='h-[140px] sm:h-[150px] w-full bg-slate-200 
             rounded-lg animate-pulse'>
             </div>}
-            <AddExpense budgetId={params.id}
-            user={user}
-            refreshData={()=>getBudgetInfo()}
+            <AddExpense 
+                budgetId={params.id}
+                user={user}
+                refreshData={()=>getBudgetInfo()}
             />
         </div>
-        <div className='mt-4'>
         
-          <ExpenseListTable expensesList={expensesList}
-          refreshData={()=>getBudgetInfo()} />
+        <div className='mt-6'>
+            <div className="overflow-x-auto">
+                <ExpenseListTable 
+                    expensesList={expensesList}
+                    refreshData={()=>getBudgetInfo()} 
+                />
+            </div>
         </div>
     </div>
   )
